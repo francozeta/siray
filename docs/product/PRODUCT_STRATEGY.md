@@ -1,97 +1,140 @@
 # SIRAY product strategy
 
-Last updated: 2026-08-23
+Last updated: 2026-08-24
 
-## Product thesis
+## Product decision
 
-SIRAY turns a physical table into an operational ordering point.
+SIRAY is an NFC-first ordering system for cafés, restaurants, bars, food halls, and other physical hospitality businesses.
 
-The product is not the NFC tag or QR code. The product is the reliable movement of an order from customer intent to staff acceptance, kitchen preparation, delivery, and payment confirmation.
+The NFC touchpoint is part of the product, not a future accessory. SIRAY includes the physical access kit, tag provisioning, the mobile menu, order routing, staff operations, and measurement. QR and short links remain visible fallbacks so service never depends on one phone capability or one intact tag.
 
-## Critical assessment of the original concept
+NFC is the recognizable interaction and commercial wedge. The durable advantage must come from the operational system behind it: fast setup, correct context, reliable routing, hardware lifecycle management, and coexistence with the tools a business already uses.
 
-### Highest real value
+## Product promise
 
-Removing the manual order-capture relay at peak times while keeping the restaurant in control.
+> One touch opens the right menu and sends the order to the right team.
 
-### Useful but not differentiated
+SIRAY should make the physical service point understandable to software without making the guest install an app or create an account.
 
-- a mobile menu;
-- table-specific QR codes;
-- live order status;
-- a kitchen display;
-- manual payment confirmation.
+## Operating model
 
-These are required parts of the workflow, but local and regional vendors already advertise them.
+The catalog, menu, service context, and physical tag are separate concepts:
 
-### Mostly “cool” before validation
+```text
+Organization
+└── Brand or business
+    └── Location
+        ├── Catalog
+        ├── Published menus
+        └── Service zones
+            └── Service points
+                └── Access methods: NFC · QR · short link · staff link
+```
 
-- NFC hardware as the lead message;
-- loyalty, wallet passes, and customer profiles;
-- AI analytics;
-- broad payment-provider abstractions;
-- complex multi-location administration;
-- visual analytics dashboards.
+- A **catalog** contains reusable products, modifiers, images, and tax metadata.
+- A **menu** selects, prices, organizes, and schedules catalog items for a channel or location.
+- A **service zone** defines how orders are fulfilled: table delivery, bar pickup, counter pickup, or takeaway.
+- A **service point** identifies the guest's immediate context: Table 07, Main Bar, Counter A, or Pickup Shelf.
+- An **access method** opens that service point. NFC is primary; QR and a short code are fallbacks.
 
-### What could make the MVP fail
+This prevents a menu copy per table. Most tables share one published menu while each table keeps its own delivery context.
 
-1. Customers prefer a waiter in the target venue.
-2. Staff acceptance becomes a new bottleneck.
-3. The existing POS requires duplicate entry before kitchen preparation.
-4. Old or shared table links create unauthorized orders.
-5. A stale menu causes unavailable-item cancellations.
-6. Kitchen connectivity or sound notifications are unreliable.
-7. The buyer perceives SIRAY as a small feature already included in their POS.
+## Service modes
 
-## Refined beachhead
+| Mode | Physical setup | Guest identity | Fulfillment | Best initial fit |
+| --- | --- | --- | --- | --- |
+| Table | One plate per table or seating area | Anonymous table session | Staff delivers to the table | Restaurants, cafés, food halls |
+| Bar | One or more shared bar touchpoints | Name, number, or open tab reference | Guest collects at the bar | Bars, breweries, event counters |
+| Counter | Touchpoint before or at the queue | Order number | Counter collection | Fast casual, bakeries, coffee shops |
+| Pickup | Touchpoint in an entrance or pickup zone | Name or order number | Dedicated pickup area | Takeaway and pre-order operations |
+| Hybrid | Multiple zones at one location | Context depends on entry point | Table or collection | Venues that change service by time of day |
 
-### Ideal initial customer
+The first production slice should implement table service and one shared pickup mode. The underlying model must not hard-code every session to a dining table.
 
-A single-location or small-chain café / fast-casual restaurant in Lima with:
+## Menu creation paths
 
-- pronounced peak periods;
-- table or hybrid table/counter service;
-- repeat rounds or add-on orders;
-- modifier-heavy products;
-- customers comfortable using mobile web;
-- an existing POS the business does not want to replace;
-- a manager willing to measure the current workflow.
+SIRAY should offer progressively more automation without hiding an approval step.
 
-### Poor initial fit
+### 1. Guided editor
 
-- fine dining where personal service is the central experience;
-- venues with low order-capture pressure;
-- businesses primarily seeking invoicing, inventory, or accounting;
-- venues that cannot operate unless every item is first entered into the current POS;
-- buyers demanding a complete POS replacement.
+The owner creates categories, products, prices, modifier groups, availability, and photos in SIRAY. This is the dependable path for small businesses and the fallback for every customer.
+
+### 2. Assisted import
+
+Import from CSV or a structured spreadsheet. Show a validation preview for duplicates, missing prices, invalid modifier ranges, and image gaps before publishing.
+
+### 3. Document-assisted setup
+
+Extract a draft from an existing PDF, image, or public menu. AI may propose names, descriptions, categories, and prices, but a manager must review every result before it reaches a guest.
+
+### 4. POS or commerce synchronization
+
+For larger customers, synchronize catalog, prices, and availability from one selected system of record. Build one connector from a real customer requirement before designing a generic integration platform.
+
+### 5. Multi-location templates
+
+An organization defines a base menu, then locations inherit it with controlled overrides for price, availability, schedule, and local products. Publishing must show which locations will change.
+
+## Target segments
+
+### Small business
+
+- one location;
+- owner-managed menu;
+- SIRAY-hosted operations;
+- managed NFC setup;
+- shared phone, tablet, or printer for order alerts;
+- simple monthly subscription plus initial hardware kit.
+
+The experience must be usable without an IT team or a POS integration.
+
+### Growing operator
+
+- several locations or service zones;
+- reusable menu templates;
+- role-based access;
+- kitchen and front-of-house views;
+- operational reports;
+- one or two proven integrations.
+
+### Enterprise or design partner
+
+- multiple brands and locations;
+- location-scoped roles and audit history;
+- staged menu publishing and approvals;
+- tag inventory, replacement, and installation tracking;
+- API and event delivery for POS, printing, and data platforms;
+- SSO, contractual support, and data-retention controls when required.
+
+Acailab-like operators are valuable design partners because they combine branded customer experience, modifier-heavy products, peak demand, and multiple operational contexts. Enterprise requirements should shape boundaries early without forcing enterprise complexity into the first pilot.
 
 ## Jobs to be done
 
-### Customer
+### Guest
 
-“When I know what I want, let me order without waiting or downloading anything, and show me that the restaurant received it.”
+“When I know what I want, let me touch, choose, and order without waiting, downloading an app, or guessing whether the business received it.”
 
 ### Front-of-house
 
-“When several tables need attention, let confirmed orders arrive with table and modifier context so I can focus on exceptions, delivery, and hospitality.”
+“When several service points need attention, route confirmed orders with the correct destination so I can focus on hospitality, delivery, and exceptions.”
 
-### Kitchen
+### Kitchen or bar
 
-“When an order arrives, show exactly what to prepare, for which table, and what changed.”
+“Show exactly what to prepare, where it belongs, and what changed.”
 
 ### Manager
 
-“When service gets busy, show where orders are waiting and whether self-ordering actually improves speed without increasing mistakes.”
+“Let me publish the right menu to the right locations, control every physical access point, and see whether self-ordering improves service.”
 
 ## Positioning
 
 ### Category
 
-Digital ordering for physical businesses.
+NFC ordering for physical hospitality businesses.
 
 ### Spanish positioning statement
 
-> Pedidos desde mesa que llegan a cocina, sin cambiar tu POS.
+> Pedidos NFC para mesas, barras y mostradores, sin cambiar tu POS.
 
 ### Customer-facing headline
 
@@ -99,7 +142,7 @@ Digital ordering for physical businesses.
 
 ### Supporting message
 
-> SIRAY lleva el pedido desde la mesa hasta cocina, sin instalar una app, crear una cuenta ni reemplazar el POS que ya usas.
+> Con un toque, SIRAY abre el menú correcto y lleva el pedido al equipo que lo prepara. Sin app, sin cuenta y sin reemplazar tu POS.
 
 ### What not to claim yet
 
@@ -108,95 +151,121 @@ Digital ordering for physical businesses.
 - faster table turnover;
 - fewer errors;
 - compatibility with a named POS;
-- payment integration.
+- payment integration;
+- clone-proof standard NFC tags.
 
-These are hypotheses to measure, not marketing claims.
+These remain measurable hypotheses or future capabilities.
 
 ## MVP scope
 
 ### Must work end to end
 
-1. Manager creates one business, one location, and tables.
-2. Manager publishes categories, products, modifier groups, prices, and availability.
-3. A guest opens an opaque table URL from a QR code.
-4. The guest builds and submits an order without an account.
-5. The server validates table, availability, prices, totals, and idempotency.
-6. Staff or kitchen receives and explicitly accepts the order.
-7. Kitchen progresses the order through preparing and ready.
-8. The guest sees order status.
-9. Staff delivers the order.
-10. Staff charges in the existing POS and marks payment as paid in SIRAY.
-11. The table session closes after all orders are delivered/cancelled and paid.
+1. A manager creates one organization, location, menu, and service zone.
+2. The manager creates products and modifiers manually or imports a reviewed CSV.
+3. The manager publishes one menu and assigns it to the service zone.
+4. SIRAY provisions an NFC plate with QR and short-link fallbacks for each service point.
+5. A guest touches the plate and opens an opaque service-point URL.
+6. The guest builds and submits an order without an account.
+7. The server validates the access point, availability, prices, totals, and idempotency.
+8. Staff explicitly accepts the order.
+9. Kitchen or bar progresses it through preparation and ready states.
+10. The guest sees status and the correct delivery or collection instruction.
+11. Staff charges in the existing POS and confirms payment in SIRAY.
 
-### Important reductions
+### Deliberate reductions
 
-- QR first. NFC resolves to the same token later.
-- One pilot location before full multi-location administration.
-- Manual payment only.
-- No POS integration in the first pilot.
+- One location and one active menu for the first pilot.
+- Table service plus one shared pickup zone.
+- Standard NDEF URL tags with a printed QR and short code.
+- Manual payment confirmation.
 - No customer account.
-- No split bill, loyalty, promotions, receipts, WhatsApp, delivery, reservations, inventory, or invoicing.
-- No generic payment-provider interface until a second real provider is selected. Preserve provider fields and events in the data model instead.
-- No analytics dashboard; capture essential events and analyze them directly.
+- No generic POS framework, wallet, loyalty, inventory, invoicing, delivery marketplace, or reservations.
+- No automated PDF/image publishing without human review.
+- No enterprise SSO or cross-region architecture before a contracted requirement.
+
+## NFC kit and lifecycle
+
+The pilot kit includes:
+
+- physical plates or stickers appropriate to the venue surface;
+- one NDEF HTTPS URL per service point;
+- visible table or zone label;
+- printed QR and short-code fallback;
+- provisioning and installation record;
+- replacement and retirement process;
+- scan/tap diagnostics.
+
+Standard tags can be copied. The pilot mitigates abuse through opaque rotatable tokens, staff acceptance, rate limits, location controls, and visible installation checks. Higher-risk deployments may use cryptographic tags with dynamic URL parameters, but they add cost and provisioning complexity and should be justified by the threat model.
 
 ## Product rules
 
-- Order creation and payment are separate state machines.
+- NFC is primary, but ordering remains recoverable through QR, short link, and staff entry.
+- Physical access credentials never contain database IDs, prices, or sensitive business data.
+- Menus are assigned to locations or zones, not duplicated per service point.
 - A submitted order is not automatically a kitchen commitment; acceptance is explicit.
 - The server never trusts client prices or totals.
-- Product and modifier names/prices are snapshotted into order items.
+- Product and modifier names and prices are snapshotted into order items.
 - Repeated submits use an idempotency key.
-- Guests access only their active table session.
-- Staff can always pause digital ordering for a location, table, category, or product.
+- Staff can pause ordering by location, zone, point, menu, category, or product.
 - Every operational exception has a visible recovery path.
+- Hardware replacement rotates credentials without rebuilding the menu or service point.
 
 ## Pilot offer
 
-Avoid selling a broad SaaS plan before the value is measured.
-
-Offer a managed pilot:
+Offer a managed operational pilot rather than a broad SaaS plan:
 
 - one location;
-- one service zone;
-- menu setup included;
-- QR table cards;
+- one menu and one service zone;
+- 5–15 provisioned NFC plates with printed fallbacks;
+- menu setup or CSV import included;
 - staff and kitchen onboarding;
-- baseline and pilot measurement;
-- weekly workflow review.
+- one-week baseline and two-week pilot;
+- weekly workflow and hardware review.
 
-The commercial question is not “How much is a QR menu?” It is “What is the value of removing peak-hour order capture without a POS migration?”
+The commercial question is: “What is the value of turning each physical service point into a reliable ordering point without replacing the existing POS?”
 
 ## Metrics
 
 ### North-star learning metric
 
-Accepted self-orders per eligible occupied table during peak periods.
+Accepted self-orders per eligible service point during peak periods.
 
 ### Funnel
 
-`table eligible → menu opened → item added → order submitted → order accepted → order delivered → payment confirmed`
+`eligible point → NFC/QR open → menu loaded → item added → order submitted → accepted → fulfilled → payment confirmed`
 
-### Guardrails
+### Access metrics
 
-- cancellation and duplicate rate;
+- NFC opens versus QR, short-link, and staff-assisted opens;
+- tap-to-menu-load time;
+- failed or repeated opens by physical asset;
+- inactive, damaged, moved, or replaced tags;
+- guests who require instructions before opening.
+
+### Operational guardrails
+
+- cancellation, duplicate, and rejection rate;
 - unavailable-item rate;
-- staff rejection rate;
-- customer assistance requests;
 - order mismatch rate;
-- time to acceptance;
+- time to acceptance and fulfillment;
 - manual POS re-entry time;
-- kitchen notification failures.
+- kitchen notification failures;
+- customer assistance requests.
 
 ## Decision gates
 
 ### Continue
 
-Continue when customers self-order without repeated prompting, managers observe net operational value, and error rates do not worsen.
+Continue when guests use NFC without repeated explanation, the fallback rate is understood, managers observe net operational value, and error rates do not worsen.
 
 ### Adjust
 
-Adjust the workflow if adoption is strong but acceptance or POS re-entry creates delay. The likely next step is a narrower staff approval view or one prioritized POS integration.
+Adjust the physical cue, service mode, approval flow, or menu setup path when adoption or operations fail at a specific step. Do not treat every problem as a software feature request.
+
+### Expand
+
+Add multi-location publishing, hardware fleet controls, and one proven integration only after a pilot establishes repeatable demand.
 
 ### Stop or reposition
 
-Stop or reposition if adoption requires constant staff explanation, the venue's hospitality model conflicts with self-ordering, or duplicate POS entry costs more time than order capture saves.
+Stop or reposition when the venue's hospitality model conflicts with self-ordering, NFC requires constant staff explanation, or duplicate system entry costs more time than order capture saves.

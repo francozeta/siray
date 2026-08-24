@@ -1,8 +1,8 @@
 # SIRAY
 
-SIRAY is a B2B digital-ordering layer for physical businesses, starting with cafés and casual restaurants in Peru.
+SIRAY is an NFC-first B2B ordering system for physical hospitality businesses, starting with cafés, restaurants, and bars in Peru.
 
-The product goal is narrow: let a guest move from a table identifier to a real order that reaches the kitchen without staff capturing the order. SIRAY coexists with the restaurant's current POS instead of replacing it.
+The product combines provisioned NFC access points, a mobile menu, service context, order routing, and staff operations. A guest can touch at a table, bar, counter, or pickup zone and send an order without installing an app. SIRAY coexists with the business's current POS instead of replacing it.
 
 ## Current state
 
@@ -17,7 +17,7 @@ The demo supports product browsing, modifiers, cart management, order submission
 
 ## Product decisions
 
-- QR first; NFC will resolve the same opaque table identifier later.
+- NFC is the primary access path; QR and short links resolve the same opaque service-point identifier as fallbacks.
 - Guest ordering requires no account.
 - Kitchen/staff explicitly accepts a submitted order.
 - Order and payment states are independent.
@@ -29,6 +29,7 @@ Read the supporting documents:
 - [Peru market discovery](docs/research/PERU_MARKET_DISCOVERY.md)
 - [Product strategy](docs/product/PRODUCT_STRATEGY.md)
 - [MVP architecture](docs/architecture/MVP_ARCHITECTURE.md)
+- [Release and versioning policy](docs/engineering/RELEASES.md)
 
 ## Local development
 
@@ -50,6 +51,8 @@ Production checks:
 
 ```bash
 pnpm lint
+pnpm typecheck
+pnpm test:conventions
 pnpm build
 ```
 
@@ -75,15 +78,20 @@ The guest-order server endpoints will also require a server-only Supabase secret
 
 The 24 requested skills are vendored under `.agents/skills` so they travel with the repository. Their GitHub sources and content hashes are tracked in `skills-lock.json`.
 
+## Contributions and releases
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Conventional branches and pull request titles are verified in CI. Release Please opens a reviewed draft release pull request only when merged work has a `patch`, `minor`, or explicit `breaking` impact.
+
 ## Next implementation milestone
 
 Validate the prototype with one restaurant, then implement the production vertical slice in this order:
 
-1. tenant, menu, table, session, order, and payment schema;
+1. tenant, catalog, menu, service-zone, service-point, access, session, order, and payment schema;
 2. staff authentication and RLS;
-3. opaque table resolution and guest session cookie;
-4. transactional, idempotent order creation;
-5. kitchen acceptance and order status updates;
-6. guest status polling;
-7. manual payment confirmation and session closure;
-8. pilot event instrumentation.
+3. NFC plate specification, provisioning, and fallback workflow;
+4. opaque service-point resolution and guest session cookie;
+5. transactional, idempotent order creation;
+6. kitchen acceptance and order status updates;
+7. guest status polling;
+8. manual payment confirmation and session closure;
+9. pilot access, hardware, and order instrumentation.

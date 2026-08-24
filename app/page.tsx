@@ -76,11 +76,34 @@ const bottlenecks = [
 ];
 
 const flow = [
-  ["Mesa", "Escanea o acerca"],
+  ["Acceso", "Toca la placa NFC"],
   ["Pedido", "Elige y confirma"],
   ["Cocina", "Acepta y prepara"],
   ["Entrega", "Sirve con contexto"],
   ["Cobro", "Usa tu POS actual"],
+];
+
+const serviceModes = [
+  {
+    number: "01",
+    title: "Mesa",
+    copy: "Cada placa identifica la mesa y entrega el pedido con ese contexto al equipo.",
+  },
+  {
+    number: "02",
+    title: "Barra",
+    copy: "Un punto NFC compartido abre el menú de barra y organiza la entrega por nombre o número.",
+  },
+  {
+    number: "03",
+    title: "Mostrador",
+    copy: "El cliente puede elegir antes de llegar a caja y recoger cuando su pedido esté listo.",
+  },
+  {
+    number: "04",
+    title: "Recojo",
+    copy: "Una zona común concentra pedidos para llevar sin mezclarlos con la atención en salón.",
+  },
 ];
 
 export default function Home() {
@@ -117,21 +140,22 @@ export default function Home() {
           <div className="relative z-10 max-w-3xl">
             <p className="reveal mb-6 flex w-fit items-center gap-2 rounded-full bg-brand-soft px-3 py-1.5 text-sm font-semibold text-brand shadow-[inset_0_0_0_1px_oklch(0.36_0.078_151/0.12)]">
               <span className="size-1.5 rounded-full bg-brand" />
-              Pedidos desde mesa · Lima, Perú
+              Pedidos NFC para locales físicos · Lima, Perú
             </p>
             <h1 className="reveal reveal-delay-1 max-w-[12ch] text-balance font-display text-[clamp(3.3rem,8vw,7.4rem)] font-semibold leading-[0.88] tracking-[-0.055em]">
               Tus clientes piden. Tu equipo avanza.
             </h1>
             <p className="reveal reveal-delay-2 mt-8 max-w-2xl text-pretty text-lg leading-relaxed text-ink-muted sm:text-xl">
-              SIRAY lleva el pedido desde la mesa hasta cocina, sin instalar una
-              app, crear una cuenta ni reemplazar el POS que ya usas.
+              Con un toque, SIRAY abre el menú correcto y mueve el pedido desde
+              la mesa, barra o mostrador hasta el equipo que lo prepara. Sin app,
+              sin cuenta y sin reemplazar tu POS.
             </p>
             <div className="reveal reveal-delay-3 mt-9 flex flex-col items-start gap-3 sm:flex-row">
               <Link
                 className="pressable flex min-h-12 items-center gap-2 rounded-[14px] bg-brand py-3 pl-5 pr-[18px] font-semibold text-surface shadow-[0_12px_24px_-14px_oklch(0.25_0.08_151/0.8)] hover:bg-brand-hover"
                 href="/t/demo"
               >
-                Probar experiencia de mesa
+                Probar pedido en mesa
                 <ArrowIcon className="size-5" />
               </Link>
               <a
@@ -143,9 +167,9 @@ export default function Home() {
             </div>
             <ul className="reveal reveal-delay-3 mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-ink-muted">
               {[
-                "Sin descargas",
+                "NFC como acceso principal",
+                "QR y enlace de respaldo",
                 "Sin cuenta para pedir",
-                "Convive con tu POS",
               ].map((item) => (
                 <li className="flex items-center gap-2" key={item}>
                   <span className="grid size-5 place-items-center rounded-full bg-brand-soft text-brand">
@@ -225,16 +249,28 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="absolute right-[1%] top-[5%] hidden w-32 rotate-[7deg] rounded-2xl bg-sun p-4 text-ink shadow-[var(--shadow-card)] sm:block">
+            <div className="absolute right-[1%] top-[5%] hidden w-36 rotate-[7deg] rounded-2xl bg-sun p-4 text-ink shadow-[var(--shadow-card)] sm:block">
               <p className="font-display text-3xl font-semibold leading-none">07</p>
               <p className="mt-5 text-xs font-semibold uppercase tracking-[0.16em]">
-                Acerca o escanea
+                Toca para pedir
               </p>
-              <div className="mt-3 grid aspect-square place-items-center rounded-lg bg-surface/75">
-                <div className="grid grid-cols-4 gap-1">
+              <div className="mt-3 flex items-end justify-between rounded-lg bg-surface/75 p-3">
+                <svg
+                  className="size-11"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeWidth="2.5"
+                  viewBox="0 0 48 48"
+                >
+                  <path d="M13 17c6 4.5 6 9.5 0 14" />
+                  <path d="M20 11c11 8 11 18 0 26" />
+                  <path d="M27 6c16 11 16 25 0 36" />
+                </svg>
+                <div className="grid grid-cols-4 gap-0.5">
                   {Array.from({ length: 16 }).map((_, index) => (
                     <span
-                      className={`size-2 rounded-[1px] ${
+                      className={`size-1.5 rounded-[1px] ${
                         [0, 1, 4, 5, 7, 9, 10, 12, 14, 15].includes(index)
                           ? "bg-ink"
                           : "bg-transparent"
@@ -244,6 +280,9 @@ export default function Home() {
                   ))}
                 </div>
               </div>
+              <p className="mt-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-ink/60">
+                QR de respaldo
+              </p>
             </div>
           </div>
         </section>
@@ -262,9 +301,8 @@ export default function Home() {
             </div>
             <div className="max-w-2xl lg:pt-10">
               <p className="text-pretty text-xl leading-relaxed text-surface/70 sm:text-2xl">
-                Un menú QR solo cambia el papel por una pantalla. SIRAY elimina el
-                traspaso manual entre la intención del cliente y la operación del
-                local.
+                Un menú digital no basta. SIRAY usa el toque NFC para reconocer el
+                punto de atención y llevar cada pedido al flujo correcto del local.
               </p>
             </div>
           </div>
@@ -351,52 +389,35 @@ export default function Home() {
         <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:gap-24">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-brand">
-              El primer cliente ideal
+              Un sistema flexible
             </p>
             <h2 className="mt-5 max-w-[11ch] text-balance font-display text-5xl font-semibold leading-[0.96] tracking-[-0.035em] sm:text-6xl">
-              Empieza donde más duele: horas punta.
+              Un toque. Cuatro formas de atender.
             </h2>
             <p className="mt-7 max-w-xl text-pretty text-lg leading-relaxed text-ink-muted">
-              Cafés y restaurantes casuales con alta rotación, productos
-              personalizables y un equipo que pierde tiempo tomando pedidos que el
-              cliente podría enviar directamente.
+              El menú se administra una vez y se asigna por local, horario o zona.
+              Cada placa define dónde está el cliente y cómo debe recibir su pedido.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <article className="rounded-[26px] bg-brand-soft p-7 shadow-[inset_0_0_0_1px_oklch(0.36_0.078_151/0.1)]">
-              <p className="text-sm font-semibold text-brand">Buen encaje inicial</p>
-              <ul className="mt-8 space-y-4">
-                {[
-                  "Demoras para tomar pedidos en horas punta",
-                  "Pedidos con extras o modificadores",
-                  "Clientes que suelen pedir una segunda ronda",
-                  "POS existente que no quieren reemplazar",
-                ].map((item) => (
-                  <li className="flex gap-3 leading-relaxed" key={item}>
-                    <span className="mt-1 grid size-5 shrink-0 place-items-center rounded-full bg-brand text-surface">
-                      <CheckIcon />
-                    </span>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </article>
-            <article className="rounded-[26px] bg-canvas p-7 shadow-[inset_0_0_0_1px_var(--line)]">
-              <p className="text-sm font-semibold text-ink-muted">No es prioridad ahora</p>
-              <ul className="mt-8 space-y-4 text-ink-muted">
-                {[
-                  "Restaurantes donde el mesero es parte central del ritual",
-                  "Facturación, inventario o planillas",
-                  "Pagos integrados y billetera propia",
-                  "Delivery, reservas o marketplace",
-                ].map((item) => (
-                  <li className="flex gap-3 leading-relaxed" key={item}>
-                    <span aria-hidden="true" className="mt-3 h-px w-4 shrink-0 bg-ink/30" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </article>
+            {serviceModes.map((mode, index) => (
+              <article
+                className={`rounded-[26px] p-7 ${
+                  index === 0
+                    ? "bg-brand-soft shadow-[inset_0_0_0_1px_oklch(0.36_0.078_151/0.1)]"
+                    : "bg-canvas shadow-[inset_0_0_0_1px_var(--line)]"
+                }`}
+                key={mode.title}
+              >
+                <p className="font-mono text-sm font-semibold text-brand">
+                  {mode.number}
+                </p>
+                <h3 className="mt-10 text-xl font-semibold">{mode.title}</h3>
+                <p className="mt-3 text-pretty leading-relaxed text-ink-muted">
+                  {mode.copy}
+                </p>
+              </article>
+            ))}
           </div>
         </div>
       </section>
@@ -409,11 +430,11 @@ export default function Home() {
               Piloto en Lima
             </p>
             <h2 className="mt-5 text-balance font-display text-5xl font-semibold leading-[0.96] tracking-[-0.035em] sm:text-6xl">
-              Valida el flujo en una mesa antes de cambiar toda tu operación.
+              Valida una zona antes de cambiar toda tu operación.
             </h2>
             <p className="mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-ink/70">
-              Empezamos con un menú, una zona y un equipo. Medimos adopción,
-              velocidad y errores reales antes de agregar pagos o integraciones.
+              Empezamos con un local, un menú, una zona y un kit NFC. Medimos
+              adopción, velocidad y errores antes de agregar pagos o integraciones.
             </p>
             <div className="mt-9 flex flex-col items-start gap-3 sm:flex-row">
               <Link
@@ -440,7 +461,7 @@ export default function Home() {
             <SirayMark />
             <span translate="no">SIRAY</span>
           </div>
-          <p>Pedidos digitales para negocios físicos.</p>
+          <p>Pedidos NFC para negocios físicos.</p>
           <p>Hecho en Lima, Perú.</p>
         </div>
       </footer>
