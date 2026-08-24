@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SIRAY
 
-## Getting Started
+SIRAY is a B2B digital-ordering layer for physical businesses, starting with cafés and casual restaurants in Peru.
 
-First, run the development server:
+The product goal is narrow: let a guest move from a table identifier to a real order that reaches the kitchen without staff capturing the order. SIRAY coexists with the restaurant's current POS instead of replacing it.
+
+## Current state
+
+This repository currently includes:
+
+- a Spanish public positioning page at `/`;
+- a functional Spanish customer-flow prototype at `/t/demo`;
+- product, market, and architecture documentation in English;
+- project-scoped agent skills under `.agents/skills`.
+
+The demo supports product browsing, modifiers, cart management, order submission, and an order-status screen. It intentionally uses local mock data. No order is persisted or sent to Supabase yet.
+
+## Product decisions
+
+- QR first; NFC will resolve the same opaque table identifier later.
+- Guest ordering requires no account.
+- Kitchen/staff explicitly accepts a submitted order.
+- Order and payment states are independent.
+- Manual payment confirmation is the only MVP payment flow.
+- No POS replacement, fintech layer, inventory, invoicing, loyalty, delivery, or marketplace in the MVP.
+
+Read the supporting documents:
+
+- [Peru market discovery](docs/research/PERU_MARKET_DISCOVERY.md)
+- [Product strategy](docs/product/PRODUCT_STRATEGY.md)
+- [MVP architecture](docs/architecture/MVP_ARCHITECTURE.md)
+
+## Local development
+
+Requirements:
+
+- Node.js 22 or later;
+- pnpm 9.15.3.
+
+Install and run:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) and [http://localhost:3000/t/demo](http://localhost:3000/t/demo).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Production checks:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm lint
+pnpm build
+```
 
-## Learn More
+## Environment variables
 
-To learn more about Next.js, take a look at the following resources:
+The repository is prepared for Supabase but the current UI prototype does not require a live database.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Expected public variables for the future integration:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+```
 
-## Deploy on Vercel
+The guest-order server endpoints will also require a server-only Supabase secret. Never prefix a secret/service-role key with `NEXT_PUBLIC_` and never expose a database password to browser code.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Language policy
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Customer and restaurant-facing product interfaces are written in Spanish.
+- README files, architecture notes, research, and engineering documentation are written in English.
+
+## Agent skills
+
+The 24 requested skills are vendored under `.agents/skills` so they travel with the repository. Their GitHub sources and content hashes are tracked in `skills-lock.json`.
+
+## Next implementation milestone
+
+Validate the prototype with one restaurant, then implement the production vertical slice in this order:
+
+1. tenant, menu, table, session, order, and payment schema;
+2. staff authentication and RLS;
+3. opaque table resolution and guest session cookie;
+4. transactional, idempotent order creation;
+5. kitchen acceptance and order status updates;
+6. guest status polling;
+7. manual payment confirmation and session closure;
+8. pilot event instrumentation.
