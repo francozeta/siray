@@ -21,11 +21,11 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: {
-    default: "SIRAY — Pedidos desde mesa que llegan a cocina",
+    default: "SIRAY — Pedidos NFC para negocios físicos",
     template: "%s · SIRAY",
   },
   description:
-    "Tus clientes piden desde la mesa y el pedido llega a cocina, sin instalar una app ni reemplazar tu POS.",
+    "Tus clientes tocan una placa NFC, ven el menú correcto y piden desde la mesa, barra o mostrador sin instalar una app.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
