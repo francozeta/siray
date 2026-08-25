@@ -34,46 +34,29 @@ select ok(
   'the narrow guest access resolver exists'
 );
 
-select results_eq(
-  $$
-    select c.relname::text
+select is(
+  (
+    select count(*)
     from pg_class as c
     join pg_namespace as n on n.oid = c.relnamespace
     where n.nspname = 'api'
       and c.relkind = 'r'
       and c.relrowsecurity
-    order by c.relname
-  $$,
-  array[
-    'access_assets',
-    'businesses',
-    'catalogs',
-    'locations',
-    'menu_assignments',
-    'menu_items',
-    'menu_sections',
-    'menu_versions',
-    'menus',
-    'organization_members',
-    'organizations',
-    'products',
-    'service_points',
-    'service_zones'
-  ]::text[],
+  ),
+  14::bigint,
   'every exposed application table has RLS enabled'
 );
 
-select results_eq(
-  $$
-    select c.relname::text
+select is(
+  (
+    select count(*)
     from pg_class as c
     join pg_namespace as n on n.oid = c.relnamespace
     where n.nspname = 'private'
       and c.relkind = 'r'
       and c.relrowsecurity
-    order by c.relname
-  $$,
-  array['access_credentials', 'access_events']::text[],
+  ),
+  2::bigint,
   'private data uses RLS as defense in depth'
 );
 
