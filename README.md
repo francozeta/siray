@@ -10,6 +10,8 @@ This repository currently includes:
 
 - a Spanish public positioning page at `/`;
 - a functional Spanish customer-flow prototype at `/t/demo`;
+- a versioned Supabase schema for tenants, service points, access assets, and menus;
+- typed browser/server Supabase clients prepared for staff authentication;
 - product, market, and architecture documentation in English;
 - project-scoped agent skills under `.agents/skills`.
 
@@ -29,13 +31,14 @@ Read the supporting documents:
 - [Peru market discovery](docs/research/PERU_MARKET_DISCOVERY.md)
 - [Product strategy](docs/product/PRODUCT_STRATEGY.md)
 - [MVP architecture](docs/architecture/MVP_ARCHITECTURE.md)
+- [Technology stack](docs/engineering/STACK.md)
 - [Release and versioning policy](docs/engineering/RELEASES.md)
 
 ## Local development
 
 Requirements:
 
-- Node.js 22 or later;
+- Node.js 24;
 - pnpm 9.15.3.
 
 Install and run:
@@ -52,22 +55,36 @@ Production checks:
 ```bash
 pnpm lint
 pnpm typecheck
-pnpm test:conventions
+pnpm test
 pnpm build
 ```
 
+### Local database
+
+Supabase local development requires Docker Desktop. The CLI is pinned in this repository, so no global installation is needed.
+
+```bash
+pnpm db:start
+pnpm db:lint
+pnpm db:test
+pnpm db:types
+pnpm db:stop
+```
+
+Database migrations live in `supabase/migrations`, and pgTAP security tests live in `supabase/tests`. GitHub Actions runs them in Docker even when a contributor does not have Docker locally.
+
 ## Environment variables
 
-The repository is prepared for Supabase but the current UI prototype does not require a live database.
+Copy `.env.example` to `.env.local` and replace the browser-safe placeholders with values from the Supabase Connect dialog. The current UI prototype still renders without querying the database.
 
-Expected public variables for the future integration:
+Browser-safe variables:
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 ```
 
-The guest-order server endpoints will also require a server-only Supabase secret. Never prefix a secret/service-role key with `NEXT_PUBLIC_` and never expose a database password to browser code.
+Database deployment uses `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`, and `SUPABASE_PROJECT_ID` in encrypted CI secrets. Future administrative server flows will use `SUPABASE_SECRET_KEY`. Never prefix a secret key or database password with `NEXT_PUBLIC_`.
 
 ## Language policy
 
@@ -86,12 +103,11 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Conventio
 
 Validate the prototype with one restaurant, then implement the production vertical slice in this order:
 
-1. tenant, catalog, menu, service-zone, service-point, access, session, order, and payment schema;
-2. staff authentication and RLS;
-3. NFC plate specification, provisioning, and fallback workflow;
-4. opaque service-point resolution and guest session cookie;
-5. transactional, idempotent order creation;
-6. kitchen acceptance and order status updates;
-7. guest status polling;
-8. manual payment confirmation and session closure;
-9. pilot access, hardware, and order instrumentation.
+1. connect the reviewed migration to staging and production Supabase projects;
+2. implement invite-only staff authentication and organization onboarding;
+3. implement NFC credential provisioning and the `/go/[token]` resolver;
+4. load a published menu from the assigned location or service zone;
+5. add guest sessions and transactional, idempotent order creation;
+6. add kitchen acceptance with private Realtime Broadcast;
+7. add guest status polling and manual payment confirmation;
+8. instrument the pilot access, hardware, and order funnels.
