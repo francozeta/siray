@@ -45,7 +45,7 @@ Statuses:
 | EVT-003 | Adopted                   | Polling fallback and refetch after reconnect                          | Realtime messages are transient hints, not canonical state                      | Never remove the reconciliation path                                              |
 | EVT-004 | Conditional               | Supabase Queues for integration delivery                              | Postgres-native durable messages can commit with domain events                  | First printer, POS, webhook, or notification needs retry outside the request      |
 | EVT-005 | Rejected for now          | Kafka, NATS, RabbitMQ, Redis queues, or a duplicate hand-built outbox | Unnecessary infrastructure while Postgres-native Queues meet the delivery model | Measured throughput, fan-out, retention, or isolation exceeds Queues              |
-| EVT-006 | Adopted when queues begin | Consumers deduplicate by versioned event ID                           | External effects can complete before acknowledgement and therefore repeat       | Never weaken this guarantee                                                       |
+| EVT-006 | Required gate            | Consumers deduplicate by versioned event ID                           | External effects can complete before acknowledgement and therefore repeat       | Must ship with the first queue consumer and never be weakened                     |
 
 ## Runtime decisions
 
