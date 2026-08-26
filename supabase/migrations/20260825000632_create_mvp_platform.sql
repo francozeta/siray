@@ -28,8 +28,8 @@ create table api.organizations (
   updated_at timestamptz not null default now()
 );
 
-create unique index organizations_slug_lower_idx
-  on api.organizations (lower(slug));
+create unique index organizations_slug_idx
+  on api.organizations (slug);
 
 create table api.organization_members (
   organization_id bigint not null
@@ -61,8 +61,8 @@ create table api.businesses (
   unique (organization_id, id)
 );
 
-create unique index businesses_org_slug_lower_idx
-  on api.businesses (organization_id, lower(slug));
+create unique index businesses_org_slug_idx
+  on api.businesses (organization_id, slug);
 
 create table api.locations (
   id bigint generated always as identity primary key,
@@ -83,8 +83,8 @@ create table api.locations (
   unique (organization_id, business_id, id)
 );
 
-create unique index locations_business_slug_lower_idx
-  on api.locations (organization_id, business_id, lower(slug));
+create unique index locations_business_slug_idx
+  on api.locations (organization_id, business_id, slug);
 
 create table api.service_zones (
   id bigint generated always as identity primary key,
@@ -143,13 +143,11 @@ create table api.access_assets (
   updated_at timestamptz not null default now(),
   foreign key (organization_id, business_id, service_point_id)
     references api.service_points (organization_id, business_id, id) on delete cascade,
-  unique (organization_id, business_id, id)
+  unique (organization_id, business_id, service_point_id, id)
 );
 
 create unique index access_assets_org_code_lower_idx
   on api.access_assets (organization_id, lower(asset_code));
-create index access_assets_service_point_idx
-  on api.access_assets (organization_id, business_id, service_point_id);
 
 create table api.catalogs (
   id bigint generated always as identity primary key,
@@ -317,8 +315,8 @@ create table private.access_credentials (
   created_at timestamptz not null default now(),
   foreign key (organization_id, business_id, service_point_id)
     references api.service_points (organization_id, business_id, id) on delete cascade,
-  foreign key (organization_id, business_id, access_asset_id)
-    references api.access_assets (organization_id, business_id, id)
+  foreign key (organization_id, business_id, service_point_id, access_asset_id)
+    references api.access_assets (organization_id, business_id, service_point_id, id)
     on delete set null (access_asset_id),
   check (status <> 'revoked' or revoked_at is not null)
 );
@@ -393,6 +391,251 @@ create trigger menu_items_set_updated_at before update on api.menu_items
   for each row execute function private.set_updated_at();
 create trigger menu_assignments_set_updated_at before update on api.menu_assignments
   for each row execute function private.set_updated_at();
+
+create function private.guard_last_active_owner()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  removes_active_owner boolean;
+begin
+  if old.role <> 'owner' or old.status <> 'active' then
+    if tg_op = 'DELETE' then
+      return old;
+    end if;
+    return new;
+  end if;
+
+  if tg_op = 'DELETE' then
+    removes_active_owner := true;
+  else
+    removes_active_owner := new.organization_id <> old.organization_id
+      or new.user_id <> old.user_id
+      or new.role <> 'owner'
+      or new.status <> 'active';
+  end if;
+
+  if not removes_active_owner then
+    return new;
+  end if;
+
+  perform 1
+  from api.organizations as organization
+  where organization.id = old.organization_id
+  for update;
+
+  if not found then
+    return old;
+  end if;
+
+  if not exists (
+    select 1
+    from api.organization_members as member
+    where member.organization_id = old.organization_id
+      and member.user_id <> old.user_id
+      and member.role = 'owner'
+      and member.status = 'active'
+  ) then
+    raise exception using
+      errcode = '23514',
+      message = 'organization must retain at least one active owner';
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$$;
+
+revoke execute on function private.guard_last_active_owner()
+  from public, anon, authenticated, service_role;
+
+create trigger organization_members_guard_last_owner
+  before update or delete on api.organization_members
+  for each row execute function private.guard_last_active_owner();
+
+create function private.guard_published_menu_version()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if old.published_at is null then
+    if tg_op = 'DELETE' then
+      return old;
+    end if;
+    return new;
+  end if;
+
+  if tg_op = 'DELETE' then
+    raise exception using
+      errcode = '23514',
+      message = 'a published menu version cannot be deleted';
+  end if;
+
+  if (to_jsonb(new) - 'status' - 'updated_at')
+      <> (to_jsonb(old) - 'status' - 'updated_at')
+    or (old.status = 'published' and new.status not in ('published', 'archived'))
+    or (old.status = 'archived' and new.status <> 'archived') then
+    raise exception using
+      errcode = '23514',
+      message = 'a published menu version is immutable';
+  end if;
+
+  return new;
+end;
+$$;
+
+revoke execute on function private.guard_published_menu_version()
+  from public, anon, authenticated, service_role;
+
+create trigger menu_versions_guard_published
+  before update or delete on api.menu_versions
+  for each row execute function private.guard_published_menu_version();
+
+create function private.guard_menu_section_content()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  touches_locked_version boolean;
+begin
+  if tg_op = 'INSERT' then
+    select exists (
+      select 1
+      from api.menu_versions as version
+      where version.organization_id = new.organization_id
+        and version.business_id = new.business_id
+        and version.id = new.menu_version_id
+        and (version.status <> 'draft' or version.published_at is not null)
+    ) into touches_locked_version;
+  elsif tg_op = 'DELETE' then
+    select exists (
+      select 1
+      from api.menu_versions as version
+      where version.organization_id = old.organization_id
+        and version.business_id = old.business_id
+        and version.id = old.menu_version_id
+        and (version.status <> 'draft' or version.published_at is not null)
+    ) into touches_locked_version;
+  else
+    select exists (
+      select 1
+      from api.menu_versions as version
+      where (version.status <> 'draft' or version.published_at is not null)
+        and (
+          (version.organization_id = old.organization_id
+            and version.business_id = old.business_id
+            and version.id = old.menu_version_id)
+          or
+          (version.organization_id = new.organization_id
+            and version.business_id = new.business_id
+            and version.id = new.menu_version_id)
+        )
+    ) into touches_locked_version;
+  end if;
+
+  if touches_locked_version then
+    raise exception using
+      errcode = '23514',
+      message = 'published menu sections are immutable';
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$$;
+
+revoke execute on function private.guard_menu_section_content()
+  from public, anon, authenticated, service_role;
+
+create trigger menu_sections_guard_published
+  before insert or update or delete on api.menu_sections
+  for each row execute function private.guard_menu_section_content();
+
+create function private.guard_menu_item_content()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  touches_locked_version boolean;
+begin
+  if tg_op = 'INSERT' then
+    select exists (
+      select 1
+      from api.menu_sections as section
+      join api.menu_versions as version
+        on version.organization_id = section.organization_id
+       and version.business_id = section.business_id
+       and version.id = section.menu_version_id
+      where section.organization_id = new.organization_id
+        and section.business_id = new.business_id
+        and section.id = new.menu_section_id
+        and (version.status <> 'draft' or version.published_at is not null)
+    ) into touches_locked_version;
+  elsif tg_op = 'DELETE' then
+    select exists (
+      select 1
+      from api.menu_sections as section
+      join api.menu_versions as version
+        on version.organization_id = section.organization_id
+       and version.business_id = section.business_id
+       and version.id = section.menu_version_id
+      where section.organization_id = old.organization_id
+        and section.business_id = old.business_id
+        and section.id = old.menu_section_id
+        and (version.status <> 'draft' or version.published_at is not null)
+    ) into touches_locked_version;
+  else
+    select exists (
+      select 1
+      from api.menu_sections as section
+      join api.menu_versions as version
+        on version.organization_id = section.organization_id
+       and version.business_id = section.business_id
+       and version.id = section.menu_version_id
+      where (version.status <> 'draft' or version.published_at is not null)
+        and (
+          (section.organization_id = old.organization_id
+            and section.business_id = old.business_id
+            and section.id = old.menu_section_id)
+          or
+          (section.organization_id = new.organization_id
+            and section.business_id = new.business_id
+            and section.id = new.menu_section_id)
+        )
+    ) into touches_locked_version;
+  end if;
+
+  if touches_locked_version then
+    raise exception using
+      errcode = '23514',
+      message = 'published menu items are immutable';
+  end if;
+
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
+end;
+$$;
+
+revoke execute on function private.guard_menu_item_content()
+  from public, anon, authenticated, service_role;
+
+create trigger menu_items_guard_published
+  before insert or update or delete on api.menu_items
+  for each row execute function private.guard_menu_item_content();
 
 create function private.is_org_member(target_organization_id bigint)
 returns boolean
