@@ -48,6 +48,15 @@ jobs:
           supabase gen types typescript --local --schema api > /tmp/database.types.ts
           diff --unified lib/supabase/database.types.ts /tmp/database.types.ts
 
+      - name: Upload generated types on mismatch
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: generated-database-types
+          path: /tmp/database.types.ts
+          if-no-files-found: ignore
+          retention-days: 1
+
       - name: Stop local Supabase services
         if: always()
         run: supabase stop --no-backup
