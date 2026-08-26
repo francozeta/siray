@@ -38,8 +38,8 @@ jobs:
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Test repository conventions
-        run: pnpm test:conventions
+      - name: Run unit and convention tests
+        run: pnpm test
 
       - name: Lint
         run: pnpm lint
