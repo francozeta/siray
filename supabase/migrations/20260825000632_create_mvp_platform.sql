@@ -581,7 +581,7 @@ returns table (
   access_method text
 )
 language sql
-security definer
+security invoker
 set search_path = ''
 stable
 as $$
@@ -637,9 +637,9 @@ as $$
   limit 1;
 $$;
 
-revoke execute on function api.resolve_access(bytea) from public;
+revoke execute on function api.resolve_access(bytea) from public, anon, authenticated;
 grant usage on schema api to anon, authenticated, service_role;
-grant execute on function api.resolve_access(bytea) to anon, authenticated, service_role;
+grant execute on function api.resolve_access(bytea) to service_role;
 
 grant select, insert, update, delete on table
   api.organizations,

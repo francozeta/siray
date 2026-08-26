@@ -1,5 +1,5 @@
 begin;
-select plan(11);
+select plan(13);
 
 insert into auth.users (id, email)
 values
@@ -106,10 +106,18 @@ select throws_ok(
   null,
   'anonymous users cannot read credential hashes'
 );
+select throws_ok(
+  $$select * from api.resolve_access(decode(repeat('ab', 32), 'hex'))$$,
+  '42501',
+  null,
+  'anonymous users cannot call the server-only access resolver'
+);
+
+set local role service_role;
 select results_eq(
   $$select business_slug from api.resolve_access(decode(repeat('ab', 32), 'hex'))$$,
   array['alpha-cafe'],
-  'an active opaque credential resolves to narrow service context'
+  'the server resolves an active opaque credential to narrow service context'
 );
 select is_empty(
   $$select * from api.resolve_access(decode(repeat('cd', 32), 'hex'))$$,
@@ -118,6 +126,12 @@ select is_empty(
 
 set local role authenticated;
 set local request.jwt.claim.sub = '11111111-1111-1111-1111-111111111111';
+select throws_ok(
+  $$select * from api.resolve_access(decode(repeat('ab', 32), 'hex'))$$,
+  '42501',
+  null,
+  'authenticated browsers cannot bypass the server-only access resolver'
+);
 select results_eq(
   $$select slug from api.businesses order by slug$$,
   array['alpha-cafe'],

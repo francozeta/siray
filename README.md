@@ -31,6 +31,7 @@ Read the supporting documents:
 - [Peru market discovery](docs/research/PERU_MARKET_DISCOVERY.md)
 - [Product strategy](docs/product/PRODUCT_STRATEGY.md)
 - [MVP architecture](docs/architecture/MVP_ARCHITECTURE.md)
+- [Architecture decision register](docs/architecture/DECISION_REGISTER.md)
 - [Technology stack](docs/engineering/STACK.md)
 - [Release and versioning policy](docs/engineering/RELEASES.md)
 
